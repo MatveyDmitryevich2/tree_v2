@@ -17,9 +17,9 @@ int main()
     for(;;)
     {
         char c;
-        std::cin >> c;
+        //std::cin >> c;
 
-        if (!std::cin) { break; }
+        if (!(std::cin >> c)) { break; }
 
         if (c == KEY)
         {

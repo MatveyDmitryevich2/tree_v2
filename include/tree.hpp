@@ -51,8 +51,41 @@ class Tree
         }
     }
 
+    void ClearTree()
+    {
+        if(root != nullptr)
+        {
+            Node* iter_node = root->right;
+            while (iter_node->lthread != true) { iter_node = iter_node->left; }
+ // ClearTree();
+        // delete head;
+            while (iter_node != head)
+            {
+                Node* next_node = Successor(iter_node);
+                delete iter_node;
+                iter_node = next_node;
+            }
+
+            delete root;
+            root = nullptr;
+        }
+
+        head->left = head;
+        head->lthread = true;
+    }
+
+    Tree(const Tree&) = delete;
+    Tree& operator=(const Tree&) = delete;
+
+    
     public:
 
+    ~Tree()
+    {
+        ClearTree();
+        delete head;
+    }
+    
     Tree()
     {
         head = new Node();
@@ -75,20 +108,17 @@ class Tree
             return;
         }
 
-        else
+        for (;;)
         {
-            for (;;)
+            if (key < node->key)
             {
-                if (key < node->key)
-                {
-                    if (node->lthread == false) { node = node->left; continue; }
-                    else { break; }
-                }
-                if (key > node->key)
-                {
-                    if (node->rthread == false) { node = node->right; continue; }
-                    else { is_node_left = false; break; }
-                }
+                if (node->lthread == false) { node = node->left; continue; }
+                else { break; }
+            }
+            if (key > node->key)
+            {
+                if (node->rthread == false) { node = node->right; continue; }
+                else { is_node_left = false; break; }
             }
         }
 
