@@ -5,29 +5,50 @@
 
 class Tree
 {
+    enum Color
+    {
+        red,
+        black
+    };
+
     struct Node
     {
-        int key;
-        Node* left;
-        Node* right;
-        bool lthread;
-        bool rthread;
+        int value;
 
-        Node(int k = 0)
-            : key(k), left(nullptr), right(nullptr),
-            lthread(true), rthread(true) {}
+        Node* left;
+        bool is_lthread;
+
+        Node* right;
+        bool is_rthread;
+
+        Color color;
+
+        Node(int val = 0)
+            : value(val), left(nullptr), is_lthread(true),
+            right(nullptr), is_rthread(true) {}
     };
 
     Node* root = nullptr;
     Node* head = nullptr;
 
+    Node* GoToLeftmost(Node* node)
+    {
+        assert(node);
+
+        while (node->is_lthread != true) { node = node->left; }
+
+        return node;
+    }
+
     Node* Successor(Node* node)
     {
-        if (node->rthread == true) { return node->right; }
+        assert(node);
+
+        if (node->is_rthread == true) { return node->right; }
         else 
         {
             node = node->right;
-            while (node->lthread != true) { node = node->left; }
+            node = GoToLeftmost(node);
             return node;
         }
     }
@@ -37,54 +58,102 @@ class Tree
         Node* node = root;
         for (;;)
         {
-            if (min == node->key) { return node; }
-            if (min < node->key)
+            if (node->value == min) { return node; }
+            else if (node->value > min)
             {
-                if (node->lthread == false) { node = node->left; continue; }
-                else { return node; }
+                if (node->is_lthread) { return node; }
+                node = node->left;
             }
-            if (min > node->key)
+            else if (node->value < min)
             {
-                if (node->rthread == false) { node = node->right; continue; }
-                else { node = Successor(node); return node; }
+                if (node->is_rthread) { return Successor(node); }
+                node = node->right;
             }
         }
     }
 
     void ClearTree()
     {
-        if(root != nullptr)
+        if(root == nullptr)
         {
-            Node* iter_node = root->right;
-            while (iter_node->lthread != true) { iter_node = iter_node->left; }
- // ClearTree();
-        // delete head;
-            while (iter_node != head)
-            {
-                Node* next_node = Successor(iter_node);
-                delete iter_node;
-                iter_node = next_node;
-            }
-
-            delete root;
-            root = nullptr;
+            head->left = head;
+            head->is_lthread = true;
+            return;
         }
 
-        head->left = head;
-        head->lthread = true;
+        Node* iter_node = root->right;
+        iter_node = GoToLeftmost(iter_node);
+
+        while (iter_node != head)
+        {
+            Node* next_node = Successor(iter_node);
+            delete iter_node;
+            iter_node = next_node;
+        }
+
+        delete root;
+        root = nullptr;
     }
+    
+    Node* RotateRight(Node* subroot)
+    {
+        Node* y = subroot;
+        if (y->is_lthread == true) { return subroot; }
+        Node* x = y->left;
+        
+        if (x->is_rthread == true)
+        {
+            x->right = y;
+            x->is_rthread = false;
+            
+            y->left = x;
+            y->is_lthread = true;
 
-    Tree(const Tree&) = delete;
-    Tree& operator=(const Tree&) = delete;
+            return x;
+        }
+        
+        else
+        {
+            y->left = x->right;
+            y->is_lthread = false;
+            
+            x->right = y;
+            x->is_rthread =  false;
+            
+            return x;
+        }
+    }
+    
+    Node* RotateLeft(Node* subroot)
+    {
+        Node* y = subroot;
+        if (y->is_rthread == true) { return subroot; }
+        Node* x = y->right;
+        
+        if (x->is_lthread == true)
+        {
+            x->left = y;
+            x->is_lthread = false;
+            
+            y->right = x;
+            y->is_rthread = true;
 
+            return x;
+        }
+        
+        else
+        {
+            y->right = x->left;
+            y->is_rthread = false;
+            
+            x->left = y;
+            x->is_lthread = false;
+            
+            return x;
+        }
+    }
     
     public:
-
-    ~Tree()
-    {
-        ClearTree();
-        delete head;
-    }
     
     Tree()
     {
@@ -92,53 +161,62 @@ class Tree
         head->left = head;
         head->right = head;
     }
+    
+    ~Tree()
+    {
+        ClearTree();
+        delete head;
+    }
+    
+    Tree(const Tree&) = delete;
+    Tree& operator=(const Tree&) = delete;
 
-    void Insert(int key)
+    void Insert(int value)
     {
         Node* node = root;
-        bool is_node_left = true;
-
+        
         if (root == nullptr)
         {
-            root = new Node(key);
+            root = new Node(value);
             root->left = head;
             root->right = head;
             head->left = root;
-            head->lthread = false;
+            head->is_lthread = false;
             return;
         }
 
+        bool is_node_left = true;
         for (;;)
         {
-            if (key < node->key)
+            if (value < node->value)
             {
-                if (node->lthread == false) { node = node->left; continue; }
-                else { break; }
+                if (node->is_lthread) { break; }
+                node = node->left;
             }
-            if (key > node->key)
+            else if (value > node->value)
             {
-                if (node->rthread == false) { node = node->right; continue; }
-                else { is_node_left = false; break; }
+                if (node->is_rthread) { is_node_left = false; break; }
+                node = node->right;
             }
         }
 
         if (is_node_left)
         {
             Node* pred = node->left;
-            Node* new_node = new Node(key);
+            Node* new_node = new Node(value);
             new_node->left = pred;
             new_node->right = node;
-            node->lthread = false;
+            node->is_lthread = false;
             node->left = new_node;
         }
 
         else
         {
             Node* succ = node->right;
-            Node* new_node = new Node(key);
+            Node* new_node = new Node(value);
             new_node->right = succ;
             new_node->left = node;
-            node->rthread = false;
+            node->is_rthread = false;
             node->right = new_node;
         }
     }
@@ -149,7 +227,7 @@ class Tree
 
         std::size_t count = 0;
         for (Node* iter_node = LowerBound(min);
-             iter_node != head && iter_node->key <= max;
+             iter_node != head && iter_node->value <= max;
              count++)
         {
             iter_node = Successor(iter_node);
