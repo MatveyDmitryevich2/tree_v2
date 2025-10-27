@@ -6,7 +6,7 @@
 
 class Tree
 {
-    enum Color
+    enum class Color
     {
         red,
         black
@@ -26,17 +26,17 @@ class Tree
 
         Node(int val = 0)
             : value(val), left(nullptr), is_lthread(true),
-            right(nullptr), is_rthread(true), color(red) {}
+            right(nullptr), is_rthread(true), color(Color::red) {}
     };
 
     Node* root = nullptr;
     Node* head = nullptr;
 
-    Node* GoToLeftmost(Node* node)
+    Node* GoToLeftMost(Node* node)
     {
         assert(node);
 
-        while (node->is_lthread != true) { node = node->left; }
+        while (!node->is_lthread) { node = node->left; }
 
         return node;
     }
@@ -45,11 +45,11 @@ class Tree
     {
         assert(node);
 
-        if (node->is_rthread == true) { return node->right; }
+        if (node->is_rthread) { return node->right; }
         else 
         {
             node = node->right;
-            node = GoToLeftmost(node);
+            node = GoToLeftMost(node);
             return node;
         }
     }
@@ -75,14 +75,14 @@ class Tree
 
     void ClearTree()
     {
-        if(root == nullptr)
+        if (root == nullptr)
         {
             head->left = head;
             head->is_lthread = true;
             return;
         }
 
-        Node* iter_node = GoToLeftmost(root);
+        Node* iter_node = GoToLeftMost(root);
 
         while (iter_node != head)
         {
@@ -96,11 +96,13 @@ class Tree
     
     Node* RotateRight(Node* subroot)
     {
+        assert(subroot);
+
         Node* y = subroot;
-        if (y->is_lthread == true) { return subroot; }
+        if (y->is_lthread) { return subroot; }
         Node* x = y->left;
         
-        if (x->is_rthread == true)
+        if (x->is_rthread)
         {
             x->right = y;
             x->is_rthread = false;
@@ -125,11 +127,13 @@ class Tree
     
     Node* RotateLeft(Node* subroot)
     {
+        assert(subroot);
+
         Node* y = subroot;
         if (y->is_rthread == true) { return subroot; }
         Node* x = y->right;
         
-        if (x->is_lthread == true)
+        if (x->is_lthread)
         {
             x->left = y;
             x->is_lthread = false;
@@ -152,101 +156,112 @@ class Tree
         }
     }
 
-    Color IsColorLeftChild(Node* node) { return (node->is_lthread == true) ? black : node->left->color; }
-    Color IsColorRightChild(Node* node) { return (node->is_rthread == true) ? black : node->right->color; }
+    const size_t PARENT = 2;
+    const size_t GRAND_PARENT = 3;
+
     Color IsNodeColor(Node* node) { return node->color; }
 
-    bool HistoryToPathHasFromTop(size_t i) { return (history_to_path.size() >= i); }
-    Node* ElemFromTop(size_t i) { return (history_to_path[history_to_path.size() - i].first); }
-    Node** UplinkFromTop(size_t i) { return (history_to_path[history_to_path.size() - i].second); }
+    bool HistoryToPathHasFromTop(size_t i) { return (path_history.size() >= i); }
+    Node* ElemFromTop(size_t i) { return (path_history[path_history.size() - i].first); }
+    Node** UplinkFromTop(size_t i)
+    { return (path_history[path_history.size() - i].second); }
 
-    bool UncleExist() { return ((!ElemFromTop(3)->is_lthread) && (!ElemFromTop(3)->is_rthread)); }
-    bool IsUncleLeft() { return (UplinkFromTop(2) == &(ElemFromTop(3)->right)); }
-    Node* SearchUncle() { return IsUncleLeft() ? ElemFromTop(3)->left : ElemFromTop(3)->right; }
+    bool UncleExist()
+    { return ((!ElemFromTop(GRAND_PARENT)->is_lthread)
+              && (!ElemFromTop(GRAND_PARENT)->is_rthread)); }
+    bool IsUncleLeft()
+    { return (UplinkFromTop(PARENT) == &(ElemFromTop(GRAND_PARENT)->right)); }
+    Node* SearchUncle()
+    { return IsUncleLeft() ? ElemFromTop(GRAND_PARENT)->left
+             : ElemFromTop(GRAND_PARENT)->right; }
 
     void Balancing()
     {
-        for(;;)
+        for (;;)
         {
-            if(!HistoryToPathHasFromTop(3))
+            if (!HistoryToPathHasFromTop(GRAND_PARENT))
             {
-                if(HistoryToPathHasFromTop(2))
+                if (HistoryToPathHasFromTop(PARENT))
                 {
-                    Node* parent = ElemFromTop(2);
-                    parent->color = black;
+                    Node* parent = ElemFromTop(PARENT);
+                    parent->color = Color::black;
                 }
 
                 break;
             }
 
-            Node* grand_parent = ElemFromTop(3);
-            Node* parent = ElemFromTop(2);
+            Node* grand_parent = ElemFromTop(GRAND_PARENT);
+            Node* parent = ElemFromTop(PARENT);
 
-            if(UncleExist() && (SearchUncle()->color == red))
+            if (UncleExist() && (SearchUncle()->color == Color::red))
             {
-                grand_parent->color = red;
-                parent->color = black;
-                SearchUncle()->color = black;
+                grand_parent->color = Color::red;
+                parent->color = Color::black;
+                SearchUncle()->color = Color::black;
 
-                history_to_path.pop_back();
-                history_to_path.pop_back();
+                path_history.pop_back();
+                path_history.pop_back();
 
                 continue;
             }
 
-            if(IsBranchInternalAndLeft())
+            if (IsBranchInternalAndLeft())
             {
                 grand_parent->left = RotateLeft(parent);
                 Node* new_root = RotateRight(grand_parent);
-                *UplinkFromTop(3)= new_root;
+                *UplinkFromTop(GRAND_PARENT) = new_root;
 
-                new_root->color = black;
-                if (!new_root->is_rthread) new_root->right->color = red;
+                new_root->color = Color::black;
+                if (!new_root->is_rthread) new_root->right->color = Color::red;
 
                 break;
             }
 
-            else if(IsBranchInternalAndRight())
+            else if (IsBranchInternalAndRight())
             {
                 grand_parent->right = RotateRight(parent);
                 Node* new_root = RotateLeft(grand_parent);
-                *UplinkFromTop(3) = new_root;
+                *UplinkFromTop(GRAND_PARENT) = new_root;
 
-                new_root->color = black;
-                if (!new_root->is_lthread) new_root->left->color = red;
+                new_root->color = Color::black;
+                if (!new_root->is_lthread) new_root->left->color = Color::red;
 
                 break;
             }
 
-            else if(IsBranchExternalAndLeft())
+            else if (IsBranchExternalAndLeft())
             {
-                *UplinkFromTop(3)= RotateRight(grand_parent);
+                *UplinkFromTop(GRAND_PARENT) = RotateRight(grand_parent);
                 
-                parent->color = black;
-                grand_parent->color = red;
+                parent->color = Color::black;
+                grand_parent->color = Color::red;
 
                 break;
             }
 
-            else if(IsBranchExternalAndRight())
+            else if (IsBranchExternalAndRight())
             {
-                *UplinkFromTop(3)= RotateLeft(grand_parent);
+                *UplinkFromTop(GRAND_PARENT) = RotateLeft(grand_parent);
 
-                parent->color = black;
-                grand_parent->color = red;
+                parent->color = Color::black;
+                grand_parent->color = Color::red;
 
                 break;
             }
         }
     }
 
-    bool IsBranchInternalAndLeft()  { return (!IsUncleLeft() && (ElemFromTop(2)->right == ElemFromTop(1))); }
-    bool IsBranchInternalAndRight() { return (IsUncleLeft()  && (ElemFromTop(2)->left  == ElemFromTop(1))); }
-    bool IsBranchExternalAndLeft()  { return (!IsUncleLeft() && (ElemFromTop(2)->left  == ElemFromTop(1))); }
-    bool IsBranchExternalAndRight() { return (IsUncleLeft()  && (ElemFromTop(2)->right == ElemFromTop(1))); }
+    bool IsBranchInternalAndLeft()
+    { return (!IsUncleLeft() && (ElemFromTop(PARENT)->right == ElemFromTop(1))); }
+    bool IsBranchInternalAndRight()
+    { return (IsUncleLeft()  && (ElemFromTop(PARENT)->left  == ElemFromTop(1))); }
+    bool IsBranchExternalAndLeft()
+    { return (!IsUncleLeft() && (ElemFromTop(PARENT)->left  == ElemFromTop(1))); }
+    bool IsBranchExternalAndRight()
+    { return (IsUncleLeft()  && (ElemFromTop(PARENT)->right == ElemFromTop(1))); }
 
     using HistoryToPath = typename std::vector<std::pair<Node*, Node**>>;
-    HistoryToPath history_to_path;
+    HistoryToPath path_history;
     
     public:
     
@@ -255,7 +270,7 @@ class Tree
         head = new Node();
         head->left = head;
         head->right = head;
-        head->color = black;
+        head->color = Color::black;
     }
     
     ~Tree()
@@ -278,25 +293,25 @@ class Tree
             root->right = head;
             head->left = root;
             head->is_lthread = false;
-            root->color = black;
+            root->color = Color::black;
             return;
         }
 
-        history_to_path.clear();
-        history_to_path.push_back({node, &root});
+        path_history.clear();
+        path_history.push_back({node, &root});
         bool is_node_left = true;
         for (;;)
         {
             if (value < node->value)
             {
                 if (node->is_lthread) { break; }
-                history_to_path.push_back({node->left, &(node->left)});
+                path_history.push_back({node->left, &(node->left)});
                 node = node->left;
             }
             else if (value > node->value)
             {
                 if (node->is_rthread) { is_node_left = false; break; }
-                history_to_path.push_back({node->right, &(node->right)});
+                path_history.push_back({node->right, &(node->right)});
                 node = node->right;
             }
         }
@@ -309,8 +324,8 @@ class Tree
             new_node->right = node;
             node->is_lthread = false;
             node->left = new_node;
-            new_node->color = red;
-            history_to_path.push_back({new_node, &(node->left)});
+            new_node->color = Color::red;
+            path_history.push_back({new_node, &(node->left)});
         }
 
         else
@@ -321,12 +336,12 @@ class Tree
             new_node->left = node;
             node->is_rthread = false;
             node->right = new_node;
-            new_node->color = red;
-            history_to_path.push_back({new_node, &(node->right)});
+            new_node->color = Color::red;
+            path_history.push_back({new_node, &(node->right)});
         }
 
         Balancing();
-        root->color = black;
+        root->color = Color::black;
     }
 
     std::size_t RangeQuery(int min, int max)
