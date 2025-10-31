@@ -14,28 +14,34 @@ int main()
 {
     Tree tree;
 
-    for(;;)
+    char c;
+
+    while (std::cin >> c)
     {
-        char c;
-        //std::cin >> c;
-
-        if (!(std::cin >> c)) { break; }
-
-        if (c == KEY)
+        switch(c)
         {
-            int key = 0;
-            std::cin >> key;
-            tree.Insert(key);
-        }
+            case KEY:
+            {
+                int key = 0;
+                if (!(std::cin >> key)) { return 0; }
+                tree.Insert(key);
+            } break;
 
-        if (c == QUERY)
-        {
-            int min = 0;
-            int max = 0;
-            std::cin >> min >> max;
-            std::cout << tree.RangeQuery(min, max) << " ";
+            case QUERY:
+            {
+                int min = 0;
+                int max = 0;
+                if (!(std::cin >> min >> max)) { return 0; }
+                std::cout << tree.RangeQuery(min, max) << " ";
+            } break;
+
+            default:
+            {
+                return 0;
+            }
         }
     }
 
     std::cout << std::endl;
+    return 0;
 }

@@ -314,6 +314,11 @@ class Tree
                 path_history.push_back({node->right, &(node->right)});
                 node = node->right;
             }
+            
+            else
+            {
+                return;
+            }
         }
 
         if (is_node_left)
