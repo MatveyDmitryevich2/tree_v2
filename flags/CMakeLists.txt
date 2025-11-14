@@ -1,6 +1,8 @@
 add_library(flags INTERFACE)
 target_compile_features(flags INTERFACE cxx_std_20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # to generate compile_commands.json
+
 target_compile_options(flags INTERFACE
     -fdiagnostics-color=always
     # -Wno-interference-size

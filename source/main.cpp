@@ -1,8 +1,7 @@
 #include <iostream>
-#include <string>
-#include <cstddef>
-
+#include <set>
 #include "../include/tree.hpp"
+#include "../include/std_tree.hpp"
 
 namespace
 {
@@ -12,9 +11,15 @@ namespace
 
 int main()
 {
-    Tree tree;
-
     char c;
+
+    #ifdef USE_MY_TREE
+        Tree tree;
+    #endif
+
+    #ifdef USE_STD_TREE
+        std::set<int> tree;
+    #endif
 
     while (std::cin >> c)
     {
@@ -23,16 +28,30 @@ int main()
             case KEY:
             {
                 int key = 0;
-                if (!(std::cin >> key)) { return 0; }
-                tree.Insert(key);
+                if (!(std::cin >> key)) return 0;
+
+                #ifdef USE_MY_TREE
+                    tree.Insert(key);
+                #endif
+
+                #ifdef USE_STD_TREE
+                    Insert(tree, key);
+                #endif
             } break;
 
             case QUERY:
             {
                 int min = 0;
                 int max = 0;
-                if (!(std::cin >> min >> max)) { return 0; }
-                std::cout << tree.RangeQuery(min, max) << " ";
+                if (!(std::cin >> min >> max)) return 0;
+
+                #ifdef USE_MY_TREE
+                    std::cout << tree.RangeQuery(min, max) << " ";
+                #endif
+
+                #ifdef USE_STD_TREE
+                    std::cout << RangeQuery(tree, min, max) << " ";
+                #endif
             } break;
 
             default:
