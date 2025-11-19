@@ -24,3 +24,25 @@ target_include_directories(std_tree PRIVATE
 
 target_link_libraries(std_tree PRIVATE flags)
 target_compile_definitions(std_tree PRIVATE USE_STD_TREE)
+
+add_executable(bench_tree
+    source/bench_main.cpp
+)
+
+target_include_directories(bench_tree PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(bench_tree PRIVATE flags)
+target_compile_definitions(bench_tree PRIVATE USE_MY_TREE)
+
+add_executable(bench_std_tree
+    source/bench_main.cpp
+)
+
+target_include_directories(bench_std_tree PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(bench_std_tree PRIVATE flags)
+target_compile_definitions(bench_std_tree PRIVATE USE_STD_TREE)
