@@ -42,7 +42,7 @@ int main()
                 #endif
                 auto finish = std::chrono::steady_clock::now();
 
-                auto elapsed = (finish - start).count();
+                auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start);
                 std::cout << "Insert:     " << elapsed << std::endl;
 
             } break;
@@ -63,7 +63,7 @@ int main()
                 #endif
                 auto finish = std::chrono::steady_clock::now();
 
-                auto elapsed = (finish - start).count();
+                auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start);
                 std::cout << "RangeQuery: " << elapsed << std::endl;
             } break;
 
